@@ -20,11 +20,6 @@ class GoGame:
         self.turn = 1
         self.running = True
 
-        self.hoshi_points = [
-            (3,3), (3,9), (3,15),
-            (9,3), (9,9), (9,15),
-            (15,3), (15,9), (15,15)
-        ]
 
     def draw_board(self):
         """Draws the Go board with grid lines."""
@@ -37,10 +32,13 @@ class GoGame:
                              (CELL_SIZE // 2, CELL_SIZE * x + CELL_SIZE // 2),
                              (SCREEN_SIZE - CELL_SIZE // 2, CELL_SIZE * x + CELL_SIZE // 2))
             
-        for x,y in self.hoshi_points:
+        hoshi_points = self._hoshi_points()
+
+        for x, y in hoshi_points:
             pygame.draw.circle(self.screen, BLACK,
                                (CELL_SIZE * x + CELL_SIZE // 2, CELL_SIZE * y + CELL_SIZE // 2),
                                HOSHI_RADIUS)
+            
     def draw_stone(self, x, y, color):
         """Draws a stone on the board."""
         pygame.draw.circle(self.screen, color, 
@@ -87,6 +85,19 @@ class GoGame:
 
         pygame.quit()
         sys.exit()
+    
+    def _hoshi_points(self):
+        """Calculates star points based on the board size."""
+        positions = [
+            BOARD_SIZE // 4,
+            BOARD_SIZE // 2,
+            3 * BOARD_SIZE // 4
+        ]
+        hoshi = []
+        for x in positions:
+            for y in positions:
+                hoshi.append((x, y))
+        return hoshi
 
 if __name__ == "__main__":
     game = GoGame()
