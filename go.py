@@ -20,7 +20,7 @@ class GoGame:
         self.board = [[0 for _ in range(cs.BOARD_SIZE)] for _ in range(cs.BOARD_SIZE)]
         self.turn = 1
         self.running = True
-
+        self.logic = logic.GameLogic(self)
 
     def draw_board(self):
         """Draws the Go board with grid lines."""
@@ -74,11 +74,15 @@ class GoGame:
             pygame.draw.circle(self.screen, (150,150,150), (hover_x, hover_y), cs.STONE_RADIUS, 2)
     
     def handle_mouse_click(self, pos):
-        """Handles a mouse click event to place stones."""
+        """Handles a mouse click event to place stones. Returns True if valid, False otherwise"""
         x, y = self.get_board_position(pos)
-        if self.is_valid_move(x, y):
+        if self.logic.liberties(x,y) == 0:
+            self.board[y][x] = 0
+            return False
+        elif self.is_valid_move(x, y):
             self.board[y][x] = self.turn
             self.turn = 3 - self.turn
+            return True
     
     def menu(self):
         """Menu loop"""
@@ -144,12 +148,17 @@ class GoGame:
                 if event.type == pygame.QUIT:
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
-                    self.handle_mouse_click(event.pos)
-
+                    if self.handle_mouse_click(event.pos) == False:
+                        print("Invalid Move: Suicide Formed")
+                        
+            self._handle_captures()
             self.draw_board()
             self.draw_stones()
+            self._turn_background()
             self.hover_indicator()
+            
             pygame.display.flip()
+            
 
         pygame.quit()
         sys.exit()
@@ -186,6 +195,39 @@ class GoGame:
             pygame.draw.circle(self.screen, color,
                                (cs.CELL_SIZE * x , cs.CELL_SIZE * y),
                                cs.CELL_SIZE // 2 - 5)
+    
+    def _handle_captures(self):
+        """Draws all placed stones on the board."""
+        for y in range(cs.BOARD_SIZE):
+            for x in range(cs.BOARD_SIZE):
+                self.logic.captures(x,y)
+    
+    def _turn_background(self):
+        default_font = pygame.font.get_default_font()
+        font = pygame.font.Font(default_font,36)
+
+        score_font = pygame.font.Font(default_font,12)
+        score_font.set_italic(True)
+
+        black_turn = font.render("Black's Turn",True,cs.BLACK)
+        white_turn = font.render("White's Turn",True,cs.WHITE)
+
+        black_captures = score_font.render("Captures: " + str(self.logic.captured[1]),True,cs.BLACK)
+        white_captues = score_font.render("Captures: " + str(self.logic.captured[2]),True,cs.WHITE)
+        
+        if self.turn == 1:
+            self.screen.blit(black_turn,(cs.SCREEN_SIZE//2 - black_turn.get_width() // 2, 20))
+            self.screen.blit(black_captures, (cs.SCREEN_SIZE//2 - black_captures.get_width() // 2, 60))
+        elif self.turn == 2:
+            self.screen.blit(white_turn,(cs.SCREEN_SIZE//2 - white_turn.get_width() // 2, 20))
+            self.screen.blit(white_captues, (cs.SCREEN_SIZE//2 - white_captues.get_width() // 2, 60))
+        
+
+        
+
+        
+
+        
 
 
 
