@@ -11,7 +11,7 @@ class GameLogic:
     def __init__(self, game:go.GoGame) -> None:
         self.go = game
         self.captured = {1:0,2:0}
-
+        self.forbidden_moves = set()
 
     def captures(self,x,y):
         color = self.go.board[y][x]
@@ -27,8 +27,12 @@ class GameLogic:
                     captures.append((nx, ny))
         
         for cx, cy in captures:
+            group = set()
+            self._dfs_group(cx, cy, opponent_color, group)
+            self.forbidden_moves.update(group)
+
             total_captures = self.remove_group(cx, cy)
-            self.captured[color] = total_captures
+            self.captured[color] += total_captures
 
     def liberties(self, x, y):
         """Finds the number of liberties for a group of pieces containing the coordinates (x,y)"""
@@ -78,4 +82,5 @@ class GameLogic:
             nx, ny = x + dx, y + dy
             if 0 <= nx < cs.BOARD_SIZE and 0 <= ny < cs.BOARD_SIZE and self.go.board[ny][nx] == color:
                 self._dfs_group(nx, ny, color, remove)
+
     

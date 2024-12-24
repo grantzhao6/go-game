@@ -53,7 +53,8 @@ class GoGame:
 
     def is_valid_move(self, x, y):
         """Checks if a move is valid."""
-        return 0 <= x < cs.BOARD_SIZE and 0 <= y < cs.BOARD_SIZE and self.board[y][x] == 0
+        return (0 <= x < cs.BOARD_SIZE and 0 <= y < cs.BOARD_SIZE 
+                and self.board[y][x] == 0 and (x, y) not in self.logic.forbidden_moves)
 
     def draw_stones(self):
         """Draws all placed stones on the board."""
@@ -64,6 +65,12 @@ class GoGame:
                 elif self.board[y][x] == 2:
                     self.draw_stone(x, y, cs.WHITE)
         
+    def draw_forbidden_moves(self):
+        for x, y in self.logic.forbidden_moves:
+            pygame.draw.circle(self.screen, (255, 0, 0), 
+                            (cs.CELL_SIZE * x + cs.CELL_SIZE // 2, cs.CELL_SIZE * y + cs.CELL_SIZE // 2),
+                            cs.STONE_RADIUS // 2)
+            
     def hover_indicator(self):
         """Draws a hover indicator where the mouse is hovering."""
         mouse_pos = pygame.mouse.get_pos()
@@ -76,10 +83,15 @@ class GoGame:
     def handle_mouse_click(self, pos):
         """Handles a mouse click event to place stones. Returns True if valid, False otherwise"""
         x, y = self.get_board_position(pos)
-        if self.logic.liberties(x,y) == 0:
-            self.board[y][x] = 0
-            return False
-        elif self.is_valid_move(x, y):
+        # if self.logic.liberties(x,y) == 0:
+        #     self.board[y][x] = 0
+        #     return False
+        # elif self.is_valid_move(x, y):
+        #     self.board[y][x] = self.turn
+        #     self.turn = 3 - self.turn
+        #     return True
+
+        if self.is_valid_move(x,y):
             self.board[y][x] = self.turn
             self.turn = 3 - self.turn
             return True
@@ -147,13 +159,17 @@ class GoGame:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
-                    if self.handle_mouse_click(event.pos) == False:
-                        print("Invalid Move: Suicide Formed")
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button ==1:
+                    self.handle_mouse_click(event.pos)
+                # elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                #     if self.handle_mouse_click(event.pos) == False:
+                #         print("Invalid Move: Suicide Formed")
+                
                         
             self._handle_captures()
             self.draw_board()
             self.draw_stones()
+            self.draw_forbidden_moves()
             self._turn_background()
             self.hover_indicator()
             
@@ -222,14 +238,6 @@ class GoGame:
             self.screen.blit(white_turn,(cs.SCREEN_SIZE//2 - white_turn.get_width() // 2, 20))
             self.screen.blit(white_captues, (cs.SCREEN_SIZE//2 - white_captues.get_width() // 2, 60))
         
-
-        
-
-        
-
-        
-
-
 
 def main():
     game = GoGame()
