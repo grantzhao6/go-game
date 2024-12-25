@@ -12,6 +12,14 @@ class GameLogic:
         self.go = game
         self.captured = {1:0,2:0}
         self.forbidden_moves = set()
+        self.white_pass = 0
+        self.black_pass = 0
+    
+    def pass_turn(self,turn):
+        if turn == 1:
+            self.black_pass += 1
+        elif turn == 2:
+            self.white_pass += 1
 
     def captures(self,x,y):
         color = self.go.board[y][x]

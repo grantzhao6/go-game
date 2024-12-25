@@ -20,6 +20,7 @@ class GoGame:
         self.board = [[0 for _ in range(cs.BOARD_SIZE)] for _ in range(cs.BOARD_SIZE)]
         self.turn = 1
         self.running = True
+        self.game_ended = False
         self.logic = logic.GameLogic(self)
 
     def draw_board(self):
@@ -67,7 +68,7 @@ class GoGame:
         
     def draw_forbidden_moves(self):
         for x, y in self.logic.forbidden_moves:
-            pygame.draw.circle(self.screen, (255, 0, 0), 
+            pygame.draw.circle(self.screen, cs.RED, 
                             (cs.CELL_SIZE * x + cs.CELL_SIZE // 2, cs.CELL_SIZE * y + cs.CELL_SIZE // 2),
                             cs.STONE_RADIUS // 2)
             
@@ -159,25 +160,44 @@ class GoGame:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button ==1:
-                    self.handle_mouse_click(event.pos)
-                # elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                #     if self.handle_mouse_click(event.pos) == False:
-                #         print("Invalid Move: Suicide Formed")
+                if not self.game_ended:
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                        self.logic.pass_turn(self.turn)
+                        self.turn = 3-self.turn
+                        if self.logic.black_pass == 2 and self.logic.white_pass == 2:
+                            self.game_ended = True
+                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button ==1:
+                        self.handle_mouse_click(event.pos)
+                    # elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    #     if self.handle_mouse_click(event.pos) == False:
+                    #         print("Invalid Move: Suicide Formed")
                 
-                        
+            
             self._handle_captures()
             self.draw_board()
             self.draw_stones()
             self.draw_forbidden_moves()
             self._turn_background()
             self.hover_indicator()
+
+            if self.game_ended:
+                self._show_end_message()
             
             pygame.display.flip()
             
 
         pygame.quit()
         sys.exit()
+    
+    def _show_end_message(self):
+        """Display a message that the game has ended."""
+        default_font = pygame.font.get_default_font()
+        font = pygame.font.Font(default_font, 10)
+        end_message = font.render("Both players have passed consecutively. The game has ended.", True, cs.RED)
+        self.screen.blit(
+            end_message,
+            (cs.SCREEN_SIZE // 2 - end_message.get_width() // 2, 0),
+        )
     
     def _hoshi_points(self):
         """Calculates star/hoshi points based on the board size."""
@@ -225,18 +245,22 @@ class GoGame:
         score_font = pygame.font.Font(default_font,12)
         score_font.set_italic(True)
 
-        black_turn = font.render("Black's Turn",True,cs.BLACK)
-        white_turn = font.render("White's Turn",True,cs.WHITE)
+        black_turn = font.render("Black's Turn",True,cs.PURPLE)
+        white_turn = font.render("White's Turn",True,cs.PURPLE)
 
-        black_captures = score_font.render("Captures: " + str(self.logic.captured[1]),True,cs.BLACK)
-        white_captues = score_font.render("Captures: " + str(self.logic.captured[2]),True,cs.WHITE)
+        black_captures = score_font.render("Captures: " + str(self.logic.captured[1]),True,cs.PURPLE)
+        white_captues = score_font.render("Captures: " + str(self.logic.captured[2]),True,cs.PURPLE)
+
+        pass_turn = score_font.render("Press [p] to pass",True,cs.PURPLE)
         
         if self.turn == 1:
             self.screen.blit(black_turn,(cs.SCREEN_SIZE//2 - black_turn.get_width() // 2, 20))
             self.screen.blit(black_captures, (cs.SCREEN_SIZE//2 - black_captures.get_width() // 2, 60))
+            self.screen.blit(pass_turn, (cs.SCREEN_SIZE//2 - pass_turn.get_width()//2,700))
         elif self.turn == 2:
             self.screen.blit(white_turn,(cs.SCREEN_SIZE//2 - white_turn.get_width() // 2, 20))
             self.screen.blit(white_captues, (cs.SCREEN_SIZE//2 - white_captues.get_width() // 2, 60))
+            self.screen.blit(pass_turn, (cs.SCREEN_SIZE//2 - pass_turn.get_width()//2,700))
         
 
 def main():
